@@ -67,7 +67,6 @@ vae.compile(optimizer=Adam())
 # Display the model summary
 vae.summary()
 
-# Note: Due to the environment, the actual training command is commented out, but would look like this:
 vae.fit(X_train, epochs=50, batch_size=32, validation_split=0.2)
 
 vae.save("C:/Users/Rhola/vae_model")
