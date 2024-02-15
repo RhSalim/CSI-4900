@@ -72,4 +72,9 @@ vae.add_loss(vae_loss)
 vae.compile(optimizer='adam')
 
 # Training the VAE model
+# Note: Depending on the size of your data, you may need to adjust epochs and batch_size
 vae.fit(X_train, epochs=10, batch_size=32, validation_data=(X_test, None))
+
+# After training, the encoder and decoder can be used for specific tasks
+
+# Note: The actual training should be executed in your local environment as the dataset is quite large and requires substantial computational resources.
