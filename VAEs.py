@@ -9,8 +9,8 @@ from sklearn.model_selection import train_test_split
 import random 
 
 # Load the datasets
-normalized_coordinate_data = pd.read_csv("C:/Users/Rhola/Normalized_Coordinate_Data.csv")
-cleaned_temperature_data = pd.read_csv("C:/Users/Rhola/Cleaned_Temperature_Data.csv")
+normalized_coordinate_data = pd.read_csv("C:/Users/Rhola/Desktop/miscalaneous/CSI 4900/Normalized_Coordinate_Data.csv")
+cleaned_temperature_data = pd.read_csv("C:/Users/Rhola/Desktop/miscalaneous/CSI 4900/Cleaned_Temperature_Data.csv")
 
 # Merge the datasets on the 'Node' column and drop rows with missing values
 combined_data = pd.merge(cleaned_temperature_data, normalized_coordinate_data, on='Node', how='inner').dropna()
@@ -67,6 +67,7 @@ vae.compile(optimizer=Adam())
 # Display the model summary
 vae.summary()
 
+# Note: Due to the environment, the actual training command is commented out, but would look like this:
 vae.fit(X_train, epochs=50, batch_size=32, validation_split=0.2)
 
-vae.save("C:/Users/Rhola/vae_model")
+vae.save("C:/Users/Rhola/Desktop/miscalaneous/CSI 4900/vae_model")
