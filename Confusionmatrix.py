@@ -1,63 +1,48 @@
 import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix
-import seaborn as sns
+from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
+import seaborn as sns
 
-def load_and_clean_data(temp_file_path, coord_file_path):
+def categorize_temperature(temp):
+    if temp <= 25:
+        return 'Low'
+    elif temp <= 30:
+        return 'Medium'
+    else:
+        return 'High'
 
-    temp_data = pd.read_csv(temp_file_path, sep='\t', header=None)
-    coord_data = pd.read_csv(coord_file_path, sep='\t', header=None)
+# Function to load, categorize, and compute confusion matrix
+def compare_temperatures(cleaned_file_path, predictions_file_path, title):
+    cleaned_df = pd.read_csv(cleaned_file_path)
+    predictions_df = pd.read_csv(predictions_file_path)
 
-    temp_data_cleaned = temp_data.drop(index=0).rename(columns={0: 'Node', 1: 'Temperature'})
-    coord_data_cleaned = coord_data.drop(index=0).rename(columns={0: 'Node', 1: 'Unknown', 2: 'X', 3: 'Y', 4: 'Z'})
+    # Ensure the dataframes are the same length for comparison
+    min_length = min(len(cleaned_df), len(predictions_df))
+    cleaned_df = cleaned_df.iloc[:min_length]
+    predictions_df = predictions_df.iloc[:min_length]
 
+    # Categorize temperatures
+    cleaned_df['Actual_Category'] = cleaned_df['TEMPERATURE'].apply(categorize_temperature)
+    predictions_df['Predicted_Category'] = predictions_df['Predicted'].apply(categorize_temperature)
 
-    temp_data_cleaned['Temperature'] = temp_data_cleaned['Temperature'].str.replace(',', '.').astype(float)
-    coord_data_cleaned['X'] = coord_data_cleaned['X'].astype(float)
-    coord_data_cleaned['Y'] = coord_data_cleaned['Y'].astype(float)
-    coord_data_cleaned['Z'] = coord_data_cleaned['Z'].astype(float)
+    # Compute confusion matrix
+    conf_matrix = confusion_matrix(cleaned_df['Actual_Category'], predictions_df['Predicted_Category'], labels=["Low", "Medium", "High"])
 
-    return temp_data_cleaned, coord_data_cleaned
-
-def create_classification_target(temp_data_cleaned, threshold=30):
-    temp_data_cleaned['Temp_Category'] = (temp_data_cleaned['Temperature'] > threshold).astype(int) 
-    return temp_data_cleaned
-
-def train_random_forest_classifier(X_train, y_train):
-    clf = RandomForestClassifier(n_estimators=100, random_state=42)
-    clf.fit(X_train, y_train)
-    return clf
-
-def evaluate_classifier(clf, X_test, y_test):
-    y_pred = clf.predict(X_test)
-    print(classification_report(y_test, y_pred))
-    cm = confusion_matrix(y_test, y_pred)
-    sns.heatmap(cm, annot=True, fmt='d')
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    plt.title('Confusion Matrix')
+    # Visualization
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="viridis", xticklabels=["Low", "Medium", "High"], yticklabels=["Low", "Medium", "High"])
+    plt.title(f'Confusion Matrix: {title}')
+    plt.xlabel('Predicted Categories')
+    plt.ylabel('Actual Categories')
     plt.show()
 
-def main(temp_file_path, coord_file_path):
-    temp_data_cleaned, coord_data_cleaned = load_and_clean_data(temp_file_path, coord_file_path)
-    temp_data_with_target = create_classification_target(temp_data_cleaned)
-    combined_data = pd.merge(temp_data_with_target, coord_data_cleaned, on='Node')
+# Paths to the cleaned and prediction files
+cleaned_file_path = "C:/Users/Rhola/Desktop/CSI 4900/cleaned_heat_transfer_analysis.csv"
+rf_predictions_file_path = "C:/Users/Rhola/Desktop/CSI 4900/rf_predictions.csv"
+vae_predictions_file_path = "C:/Users/Rhola/Desktop/CSI 4900/vae_predictions.csv"
+xgb_predictions_file_path = "C:/Users/Rhola/Desktop/CSI 4900/xgb_predictions.csv"
 
-    X = combined_data[['X', 'Y', 'Z']] 
-    y = combined_data['Temp_Category'] 
-
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-
-    clf = train_random_forest_classifier(X_train, y_train)
-
-    evaluate_classifier(clf, X_test, y_test)
-
-temp_file_path = "C:/Users/Rhola/Desktop/CSI 4900/Temp_noeuds1.txt"
-coord_file_path = "C:/Users/Rhola/Desktop/CSI 4900/Coord_noeuds1.txt"
-
-main(temp_file_path, coord_file_path)
+# Perform comparisons
+compare_temperatures(cleaned_file_path, rf_predictions_file_path, 'RF Predictions')
+compare_temperatures(cleaned_file_path, vae_predictions_file_path, 'VAE Predictions')
+compare_temperatures(cleaned_file_path, xgb_predictions_file_path, 'XGB Predictions')
